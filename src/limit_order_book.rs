@@ -5,11 +5,17 @@ use crate::Data;
 pub mod limit_order_book {
     use super::*;
 
+    /**
+     * Limit order book, f64 = orderSize / quantity
+     */
     pub struct LimitOrderBook {
         bids: HashMap<PriceLevel, f64>,
         asks: HashMap<PriceLevel, f64>,
     }
 
+    /**
+     * PriceLevel represents the integral and fractional parts of a price.
+     */
     #[derive(Debug, Hash, Eq, PartialEq)]
     struct PriceLevel {
         integral: u64,
@@ -68,7 +74,7 @@ pub mod limit_order_book {
             for (price_level, quantity) in self.asks.iter() {
                 best_ask = (price_level.integral, price_level.decimal, *quantity);
                 if best_ask.0 < price_level.integral
-                    || best_ask.0 < price_level.integral && best_ask.1 <= price_level.decimal
+                    || best_ask.0 <= price_level.integral && best_ask.1 < price_level.decimal
                 {
                     best_ask = (price_level.integral, price_level.decimal, *quantity);
                 }

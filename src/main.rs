@@ -30,15 +30,24 @@ fn main() {
     }
 }
 
+/**
+ * Set up a stream to the Deribit websocket.
+ * @param api
+ * @return WebSocket
+ */
 fn ws_connect(api: &Value) -> WebSocket<MaybeTlsStream<TcpStream>> {
-    let (mut socket, _) =
-        connect(DERIBIT_WS).expect("Could not connect to Deribit");
+    let (mut socket, _) = connect(DERIBIT_WS).expect("Could not connect to Deribit");
     println!("Connected to Deribit.");
     let message = serde_json::to_string(&api).unwrap();
     let _init = socket.write_message(Text(message));
     socket
 }
 
+/**
+ * Listen for order book events.
+ * @param socket
+ * @return bool false = reconnect
+ */
 fn order_book_events(mut socket: WebSocket<MaybeTlsStream<TcpStream>>) -> bool {
     let mut order_book: LimitOrderBook = LimitOrderBook::new();
     let mut prev_id: i64 = 0;
@@ -46,13 +55,16 @@ fn order_book_events(mut socket: WebSocket<MaybeTlsStream<TcpStream>>) -> bool {
         let response = socket.read_message().expect("Error reading message");
         match response {
             Text(s) => {
-                if !s.contains("change_id") { continue; }
-                let msg: Value = serde_json::from_str(&s)
-                    .expect("Error parsing message");
+                if !s.contains("change_id") {
+                    continue;
+                }
+                let msg: Value = serde_json::from_str(&s).expect("Error parsing message");
                 let orders: Data = serde_json::from_str(&msg["params"]["data"].to_string())
                     .expect("Error parsing object");
                 if orders.prev_change_id.is_some() {
-                    if prev_id != orders.prev_change_id.unwrap() { return false; }
+                    if prev_id != orders.prev_change_id.unwrap() {
+                        return false;
+                    }
                 }
                 prev_id = orders.change_id;
                 order_book.add_orders(orders);

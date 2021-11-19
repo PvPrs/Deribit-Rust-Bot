@@ -17,18 +17,9 @@ pub mod order {
     }
 
     impl Data {
-        pub fn get_prev_change_id(&self) -> Option<i64> {
-            self.prev_change_id
-        }
-        pub fn get_change_id(&self) -> i64 {
-            self.change_id
-        }
-
-        pub fn get_bids(&self) -> &Vec<(String, f64, f64)> {
-            &self.bids
-        }
-        pub fn get_asks(&self) -> &Vec<(String, f64, f64)> {
-            &self.asks
-        }
+        pub fn get_prev_change_id(&self)    -> Option<i64> { self.prev_change_id }
+        pub fn get_change_id(&self)         -> i64 { self.change_id }
+        pub fn get_bids(&self)              -> &Vec<(String, f64, f64)> { &self.bids }
+        pub fn get_asks(&self)              -> &Vec<(String, f64, f64)> { &self.asks }
     }
 }

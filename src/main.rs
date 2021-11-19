@@ -1,6 +1,7 @@
 use serde_json::json;
 use serde_json::Value;
 use std::net::TcpStream;
+use std::thread;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message::Text;
 use tungstenite::{connect, WebSocket};
@@ -71,10 +72,12 @@ fn order_book_events(mut socket: WebSocket<MaybeTlsStream<TcpStream>>) -> bool {
 
                 let bid = order_book.get_best_bid();
                 let ask = order_book.get_best_ask();
-
-                std::thread::sleep(std::time::Duration::from_secs(1));
-                println!("Best Bid: Price: {}.{} quantity: {}", bid.0, bid.1, bid.2);
-                println!("Best Ask: Price: {}.{} quantity: {}", ask.0, ask.1, ask.2);
+                let thread = thread::spawn( move || {
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                    println!("Best Bid: Price: {}.{} quantity: {}", bid.0, bid.1, bid.2);
+                    println!("Best Ask: Price: {}.{} quantity: {}", ask.0, ask.1, ask.2);
+                });
+                thread.join().unwrap()
             }
             _error => {
                 panic!("Error getting text");

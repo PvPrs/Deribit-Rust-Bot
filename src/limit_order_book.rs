@@ -2,7 +2,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::net::TcpStream;
 use std::sync::mpsc::SyncSender;
-use std::time::Duration;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message::Text;
 use tungstenite::WebSocket;

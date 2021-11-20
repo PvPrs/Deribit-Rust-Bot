@@ -29,7 +29,7 @@ fn main() {
     });
 
     let (sender, receiver) = sync_channel(1);
-    thread::spawn( move || {
+    thread::spawn(move || {
         let mut order_book = LimitOrderBook::new();
         while order_book.event_listener(ws_connect(&api), sender.clone()) == false {
             println!("Reconnecting to Deribit.");
@@ -39,12 +39,20 @@ fn main() {
     loop {
         match receiver.try_recv() {
             Ok(data) => {
-                println!("Best Bid: Price: ${}.{}, orderSize ${}", data[0].0, data[0].1, data[0].2);
-                println!("Best Ask: Price: ${}.{}, orderSize ${}", data[1].0, data[1].1, data[1].2);
+                println!(
+                    "Best Bid: Price: ${}.{}, orderSize ${}",
+                    data[0].0, data[0].1, data[0].2
+                );
+                println!(
+                    "Best Ask: Price: ${}.{}, orderSize ${}",
+                    data[1].0, data[1].1, data[1].2
+                );
                 thread::sleep(Duration::from_secs(1));
             }
             Err(_) => {
-                println!("Error reading channel buffer."); }
+                println!("Error reading channel buffer.");
+                thread::sleep(Duration::from_secs(1));
+            }
         }
     }
 }

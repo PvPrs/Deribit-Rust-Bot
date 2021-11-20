@@ -1,11 +1,11 @@
-use std::collections::HashMap;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::net::TcpStream;
+use std::sync::mpsc::SyncSender;
+use std::time::Duration;
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message::Text;
 use tungstenite::WebSocket;
-use std::sync::mpsc::SyncSender;
-use std::time::Duration;
 
 use crate::Data;
 
@@ -82,9 +82,9 @@ pub mod limit_order_book {
         pub fn get_best_ask(&self) -> (u64, u64, f64) {
             let mut best_ask = (0, 0, 0.0);
             for (price_level, quantity) in self.asks.iter() {
-                best_ask = (price_level.integral, price_level.decimal, *quantity);
-                if best_ask.0 < price_level.integral
-                    || best_ask.0 <= price_level.integral && best_ask.1 < price_level.decimal
+                if best_ask.0 > price_level.integral
+                    || best_ask.0 == 0
+                    || best_ask.0 >= price_level.integral && best_ask.1 > price_level.decimal
                 {
                     best_ask = (price_level.integral, price_level.decimal, *quantity);
                 }
@@ -92,8 +92,11 @@ pub mod limit_order_book {
             best_ask
         }
 
-        pub fn event_listener(&mut self, mut socket: WebSocket<MaybeTlsStream<TcpStream>>,
-                              sender: SyncSender<Vec<(u64, u64, f64)>>) -> bool {
+        pub fn event_listener(
+            &mut self,
+            mut socket: WebSocket<MaybeTlsStream<TcpStream>>,
+            sender: SyncSender<Vec<(u64, u64, f64)>>,
+        ) -> bool {
             let mut prev_id: i64 = 0;
             loop {
                 let response = socket.read_message().expect("Error reading message");
@@ -113,7 +116,9 @@ pub mod limit_order_book {
                         prev_id = orders.change_id;
                         self.add_orders(orders);
                         let best = vec![self.get_best_bid(), self.get_best_ask()];
-                        match sender.try_send(best).is_err() { _ => (), }
+                        match sender.try_send(best).is_err() {
+                            _ => (),
+                        }
                     }
                     _error => {
                         panic!("Error getting text");

@@ -1,4 +1,11 @@
 use std::collections::HashMap;
+use serde_json::Value;
+use std::net::TcpStream;
+use tungstenite::stream::MaybeTlsStream;
+use tungstenite::Message::Text;
+use tungstenite::WebSocket;
+use std::sync::mpsc::SyncSender;
+use std::time::Duration;
 
 use crate::Data;
 
@@ -39,6 +46,9 @@ pub mod limit_order_book {
             }
         }
 
+        /**
+         * Add new orders to the limit order book.
+         */
         pub fn add_orders(&mut self, order: Data) {
             order.get_bids().iter().for_each(|bid| {
                 if bid.0 == "delete" {
@@ -80,6 +90,36 @@ pub mod limit_order_book {
                 }
             }
             best_ask
+        }
+
+        pub fn event_listener(&mut self, mut socket: WebSocket<MaybeTlsStream<TcpStream>>,
+                              sender: SyncSender<Vec<(u64, u64, f64)>>) -> bool {
+            let mut prev_id: i64 = 0;
+            loop {
+                let response = socket.read_message().expect("Error reading message");
+                match response {
+                    Text(s) => {
+                        if !s.contains("change_id") {
+                            continue;
+                        }
+                        let msg: Value = serde_json::from_str(&s).expect("Error parsing message");
+                        let orders: Data = serde_json::from_str(&msg["params"]["data"].to_string())
+                            .expect("Error parsing object");
+                        if orders.prev_change_id.is_some() {
+                            if prev_id != orders.prev_change_id.unwrap() {
+                                return false;
+                            }
+                        }
+                        prev_id = orders.change_id;
+                        self.add_orders(orders);
+                        let best = vec![self.get_best_bid(), self.get_best_ask()];
+                        match sender.try_send(best).is_err() { _ => (), }
+                    }
+                    _error => {
+                        panic!("Error getting text");
+                    }
+                };
+            }
         }
     }
 }

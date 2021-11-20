@@ -50,7 +50,7 @@ fn main() {
                 thread::sleep(Duration::from_secs(1));
             }
             Err(_) => {
-                println!("Error reading channel buffer.");
+                println!("Error reading empty channel buffer.");
                 thread::sleep(Duration::from_secs(1));
             }
         }

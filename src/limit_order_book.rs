@@ -59,7 +59,7 @@ pub mod limit_order_book {
 
             order.get_asks().iter().for_each(|ask| {
                 if ask.0 == "delete" {
-                    self.bids.remove(&PriceLevel::new(ask.1));
+                    self.asks.remove(&PriceLevel::new(ask.1));
                 } else {
                     self.asks.insert(PriceLevel::new(ask.1), ask.2);
                 }

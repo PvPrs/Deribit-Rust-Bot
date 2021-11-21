@@ -120,7 +120,7 @@ pub mod limit_order_book {
                         }
                     }
                     _error => {
-                        panic!("Error getting text");
+                        return false;
                     }
                 };
             }
